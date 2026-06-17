@@ -5,10 +5,12 @@ description = "Decode MSF clock signal from SDRPlay RSPduo capture"
 requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.26",
+    "scipy>=1.11",
 ]
 
 [project.scripts]
 msf-capture = "msf_clock.capture:main"
+msf-demodulate = "msf_clock.demodulate:main"
 
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
@@ -16,3 +18,8 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.0",
+]

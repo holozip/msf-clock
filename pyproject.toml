@@ -1,0 +1,18 @@
+[project]
+name = "msf-clock"
+version = "0.1.0"
+description = "Decode MSF clock signal from SDRPlay RSPduo capture"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.26",
+]
+
+[project.scripts]
+msf-capture = "msf_clock.capture:main"
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

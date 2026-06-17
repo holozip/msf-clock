@@ -4,18 +4,18 @@ MSF clock signal IQ capture using SDRPlay RSPduo via SoapySDR.
 Signal chain:
   1. RF front-end: tuned to 60 kHz (MSF transmitter frequency)
   2. Downconversion: SDR hardware converts RF to baseband I/Q
-  3. CF32 capture: SoapySDR delivers interleaved float32 (I0, Q0, I1, Q1, ...)
-  4. Direct write: no conversion needed, bytes already in GQRX .raw format
+  3. CF32 capture: SoapySDR delivers complex64 (2 x float32 per sample)
+  4. Direct write: complex64.tobytes() produces interleaved float32, matching GQRX .raw
 
 GQRX .raw format:
    - Binary layout: [I0_f32, Q0_f32, I1_f32, Q1_f32, ...] (little-endian)
    - Each sample is 2 x 4 bytes (8 bytes per complex sample)
-   - Values in float32 range (typically [-1.0, 1.0])
+   - Raw ADC values (gain set to 0 dB; no automatic normalization)
    - No header, no sidecar metadata
 
 Requires:
   System: soapy-sdr, soapy-sdr-play3 (Debian/Ubuntu)
-  Python: numpy (via pip or system package python3-numpy)
+  Python: numpy, soapysdr (via pip or system packages python3-numpy, python3-soapysdr)
 """
 
 import argparse
@@ -45,15 +45,15 @@ except ImportError:
 # MSF signal parameters
 # To receive RF at 60 kHz
 MSF_FREQUENCY = 60000  # 60khz
-SAMPLE_RATE = 1000000  # 1Msps (matches GQRX reference, ideal for MSF ~100 Hz BW)
+SAMPLE_RATE = 1000000  # 1 Msps (1 MHz capture bandwidth; MSF signal is ~100 Hz wide within this band)
 NUM_SAMPLES_DEFAULT = 10000000  # 10 second by default
 CF_FILE_EXT = ".raw"
 
 # GQRX naming convention for automatic sample rate/frequency detection
 # Pattern: gqrx_yymmdd_hhmmss_<center_freq>_<sample_rate>_fc.raw
-# Example: gqrx_260612_160000_60000000_100000_fc.raw
+# Example: gqrx_260612_160000_60000000_1000000_fc.raw
 #   - center_freq = 60000000 (60 MHz)
-#   - sample_rate = 100000 (100 ksps)
+#   - sample_rate = 1000000 (1 Msps)
 GQRX_FILE_PREFIX = "gqrx"
 GQRX_FILE_EXT = ".raw"
 
@@ -62,7 +62,7 @@ GQRX_FILE_EXT = ".raw"
 CF32_CHUNK_SIZE = 65536
 
 # Decimation is not used — capture at native rate, write directly
-DEFAULT_DECIMATION_FACTOR = 1
+# DEFAULT_DECIMATION_FACTOR = 1
 
 
 # =============================================================================
@@ -145,7 +145,7 @@ def _setup_stream(sdr: SoapySDR.Device, frequency: float, sample_rate: float):
     Configuration:
       - Sample rate: user-specified (default 1 MHz)
       - RF frequency: user-specified (default 60 kHz for MSF)
-      - Gain: automatic (gain mode enabled, hardware controls RF gain)
+      - Gain: manual, 0 dB (RSPduo gain control is an attenuator at LF; 0 dB gives strongest signal)
       - Antenna: High-Z input (optimized for LF signals like MSF at 60 kHz)
       - Stream format: CF32 (complex 32-bit interleaved I/Q)
 
@@ -267,7 +267,7 @@ class SDRCaptureEngine:
         start_time = time.time()
 
         # Buffer for complex float32 IQ samples
-        # CF32 format: SoapySDR writes complex64 numpy array directly
+        # CF32 format: readStream fills np.complex64 array directly
         # Each element is np.complex64 (8 bytes = 2 x float32)
         buf = np.zeros(num_samples, dtype=np.complex64)
 
@@ -283,8 +283,7 @@ class SDRCaptureEngine:
                 chunk_buf = np.zeros(to_read, dtype=np.complex64)
                 result = self.sdr.readStream(self.stream, [chunk_buf], to_read, timeoutUs=100000)
                 ret = result.ret
-                flags = result.flags
-                time_ns = result.timeNs
+                # result.flags and result.timeNs are available but not used
 
                 if ret <= 0:
                     print(f"Capture error: readStream returned {result}")
@@ -349,6 +348,10 @@ def write_iq(iq_data: np.ndarray, output_path: Path) -> None:
       - Total file size = num_samples x 8 bytes
       - No header, no metadata sidecar
 
+    Note:
+        This function is defined but not used by the main capture path.
+        The capture method writes directly via output_path.write_bytes().
+
     Args:
         iq_data: numpy float32 array of interleaved I/Q values.
         output_path: Path for the .raw output.
@@ -360,7 +363,7 @@ def write_iq(iq_data: np.ndarray, output_path: Path) -> None:
 
 
 def validate_iq(output_path: Path, expected_samples: int) -> bool:
-    """Validate the .iq format after writing.
+    """Validate the .raw format after writing.
 
     Checks:
       - File exists and has correct size (expected_samples x 8 bytes)
@@ -368,7 +371,7 @@ def validate_iq(output_path: Path, expected_samples: int) -> bool:
       - Values are within [-1.0, 1.0] range
 
     Args:
-        output_path: Path to the .iq file.
+        output_path: Path to the .raw file.
         expected_samples: Expected number of complex samples.
 
     Returns:

@@ -1,0 +1,249 @@
+NPL Time & Frequency Services
+
+MSF 60 kHz Time and Date Code
+Carrier on
+Second 00
+Minute marker
+500 ms
+
+0 ms
+Seconds 01-59 †
+Second marker
+
+bit A
+
+bit B
+Carrier off
+
+0 ms
+
+100 ms
+
+200 ms
+
+300 ms
+
+The two bits, numbered xxA and xxB for second xx
+bit polarity: 0=on, 1=off
+† Most minutes have 60 seconds numbered 00-59; exceptionally a UTC minute can have 61 seconds with the
+
+extra second being numbered 60 (a positive leap second), or 59 seconds (a negative leap second).
+
+The MSF transmission from Anthorn (latitude 54° 55' N, longitude 3° 15' W) is the principal means of disseminating the
+UK national standards of time and frequency which are maintained by the National Physical Laboratory. The effective
+monopole radiated power is 15 kW and the antenna is substantially omnidirectional. The signal strength is greater
+than 10 mV/m at 100 km and greater than 100 V/m at 1000 km from the transmitter. The signal is widely used in
+northern and western Europe. The carrier frequency is maintained at 60 kHz to within 2 parts in 1012.
+The MSF time and date code format is summarised in the diagrams above. Simple on-off carrier modulation is used,
+the rise and fall times of the carrier are determined by the combination of antenna and transmitter. The timing of
+these edges is governed by the seconds and minutes of Coordinated Universal Time (UTC), which is always within 0.9
+seconds of Universal Time (UT1), an astronomical time scale based on the Earth’s rotation descended from Greenwich
+Mean Time (GMT). Every UTC second is marked by an 'off' preceded by at least 500 ms of carrier, and this second
+marker is transmitted with an accuracy better than 1 ms.
+The first second of the minute begins with a period of 500 ms with the carrier off, to serve as a minute marker. The
+other 59 (or, exceptionally, 60 or 58) seconds of the minute always begin with at least 100 ms 'off' and end with at
+least 700 ms of carrier. Seconds 01-16 carry information for the current minute about the difference (DUT1) between
+astronomical time and atomic time, and the remaining seconds convey the time and date code. The time and date
+code information is always given in terms of UK clock time and date, which is UTC in winter and UTC+1h when Summer
+Time is in effect, and it relates to the minute following that in which it is transmitted.
+The allocation of the signalling bits is detailed below and on the continuation sheet. Bits 17B-*51B inclusive, and bits
+01A-*16A inclusive, are currently set to '0', but may be used in the future. Bits *52B and *59B are currently set at '0'
+but they may be used in the future.
+
+Minute Identifier
+Bits *53A, *54A, *55A, *56A, *57A and *58A are all set permanently at '1', and are always preceded by bit *52A at '0',
+and followed by bit *59A at '0'. This sequence 01111110 never appears elsewhere in bit A, so it uniquely identifies the
+following second 00 minute marker.
+*In minutes lengthened or shortened by a positive or negative leap second all these numbers are correspondingly
+increased or decreased by one (i.e. during these 61- or 59- second minutes the position of the time and date code is
+shifted by one second relative to the start of that minute).
+
+DUT Code
+The difference UT1 - UTC is known as DUT1 and is signalled to the nearest 100 ms in the range 800 ms. A positive value
+means that UT1 is ahead of UTC. Bits 01B-16B are used to represent the DUT1 code in the following way, with bits not
+specified set to '0'.
+DUT1
+0 ms
++100 ms
++200 ms
++300 ms
++400 ms
++500 ms
++600 ms
++700 ms
++800 ms
+
+positive
+no bits set to '1'
+bit 01B '1'
+bits 01B and 02B '1'
+bits 01B-03B inclusive '1'
+bits 01B-04B inclusive '1'
+bits 01B-05B inclusive '1'
+bits 01B-06B inclusive '1'
+bits 01B-07B inclusive '1'
+bits 01B-08B inclusive '1'
+
+DUT1
+- 0 ms
+-100 ms
+-200 ms
+-300 ms
+-400 ms
+-500 ms
+-600 ms
+-700 ms
+-800 ms
+
+negative
+no bits set to '1'
+bit 09B '1'
+bits 09B and 10B '1'
+bits 09B-11B inclusive '1'
+bits 09B-12B inclusive '1'
+bits 09B-13B inclusive '1'
+bits 09B-14B inclusive '1'
+bits 09B-15B inclusive '1'
+bits 09B-16B inclusive '1'
+
+Time and D ate Code
+Binary-Coded-Decimal Year (00-99)
+20
+10
+8
+4
+2
+*19A *20A *21A *22A *23A
+
+80
+*17A
+
+40
+*18A
+
+10
+*25A
+
+BCD Month (01-12)
+8
+4
+2
+*26A *27A *28A
+
+20
+
+10
+
+8
+
+*39A
+
+*40A
+
+*41A
+
+1
+*24A
+
+BCD Day-of-Month (01-31)
+10
+8
+4
+2
+*31A *32A *33A *34A
+
+20
+*30A
+
+4
+
+2
+
+1
+
+40
+
+20
+
+10
+
+8
+
+4
+
+2
+
+1
+
+*42A
+
+*43A
+
+*44A
+
+*45A
+
+*46A
+
+*47A
+
+*48A
+
+*49A
+
+*50A
+
+*51A
+
+BCD Hour (00-23)
+
+1
+*35A
+
+Day-of-Week †
+4
+2
+1
+*36A *37A *38A
+† 0=Sunday to 6=Saturday
+
+1
+*29A
+
+BCD Minute (00-59)
+
+Parity Bits
+Bit *54B, taken with bits *17A-*24A inclusive, provides an odd number of bits set to '1'.
+Bit *55B,
+"
+*25A-*35A inclusive,
+"
+"
+"
+Bit *56B,
+"
+*36A-*38A inclusive,
+"
+"
+"
+Bit *57B,
+"
+*39A-*51A inclusive,
+"
+"
+"
+
+Summer Time
+When UK civil time is subject to a one-hour positive offset during part of the year, this period is indicated by setting bit
+*58B to '1'. Bit *53B is set to '1' during the 61 consecutive minutes immediately before a change, the last being
+minute 59, when bit *58B changes.
+In the event of UK civil time undergoing an additional permanent offset, bit *58B will need to be changed once
+without any corresponding change in UK clock time.
+
+Further Information
+For further information please visit our website:
+https://www.npl.co.uk/msf-signal
+© Crown Copyright March 2019
+Reproduced by permission of the Controller of HMSO
+
+

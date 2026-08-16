@@ -41,6 +41,7 @@ last_valid_pulse_ms = 0
 
 # --- SYSTEM TIMESTAMP CAPTURE REGISTER ---
 minute_trigger_system_time = None
+falling_edge_wall_dt = None
 
 # Leaky Peak Tracking Scalars
 peak_high = 0.010
@@ -93,6 +94,7 @@ try:
                     if sample < midpoint:
                         carrier_is_high = False
                         falling_edge_ms_idx = global_ms_counter
+                        falling_edge_wall_dt = datetime.datetime.now(datetime.timezone.utc)
                 else:
                     if sample > midpoint:
                         carrier_is_high = True
@@ -102,7 +104,10 @@ try:
                             continue
 
                         elif 450 <= pulse_duration_ms <= 550:
-                            captured_system_dt = datetime.datetime.now(datetime.timezone.utc)
+                            if falling_edge_wall_dt is not None:
+                                captured_system_dt = falling_edge_wall_dt
+                            else:
+                                captured_system_dt = datetime.datetime.now(datetime.timezone.utc)
 
                             if is_synchronized:
                                 decoder.print_atomic_clock(frame_bit_a, frame_bit_b, minute_trigger_system_time)

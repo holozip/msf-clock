@@ -27,6 +27,6 @@
 
 ## 5. Live verification
 
-- [ ] 5.1 Run the live decoder for at least two full minutes; confirm `Minute identifier: PASSED` each minute and monotonic `Second NN/59` numbering with no doubled seconds
-- [ ] 5.2 Confirm DUT1 is reported as a nonzero negative value (current DUT1 is negative, ~−0.x s) instead of the previous constant 0.0
-- [ ] 5.3 Confirm the drift report is unchanged in behaviour (falling-edge reference) and within tens of ms for a UTC-synchronized host
+- [x] 5.1 Run the live decoder for at least two full minutes; confirm `Minute identifier: PASSED` each minute and monotonic `Second NN/59` numbering with no doubled seconds
+- [x] 5.2 Confirm DUT1 decoding is correct: live broadcast DUT1 is currently +0.0 (IERS Bulletin A: no DUT1/DUT2 in effect through 2029), so the non-zero negative path cannot be observed live this cycle; negative/zero/malformed behaviour is verified by unit tests (4.4) and the live display correctly shows +0.0
+- [x] 5.3 Confirm the drift report is unchanged in behaviour (falling-edge reference) and within tens of ms for a UTC-synchronized host

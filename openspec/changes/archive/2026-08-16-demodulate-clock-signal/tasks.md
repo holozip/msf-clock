@@ -73,9 +73,18 @@
 
 - [x] 10.1 Run `msf-demodulate --help` and verify all flags documented
 - [x] 10.2 Run demodulation on a captured .raw file and inspect output
-- [ ] 10.3 Verify minute marker detected at expected position (first 500 ms off pulse)
-- [ ] 10.4 Verify edge density: approximately 2 edges per second (one on, one off per second)
-- [ ] 10.5 Verify bit stream has consistent length across A and B channels
+- [x] 10.3 Verify minute marker detected at expected position (first 500 ms off pulse)
+- [x] 10.4 Verify edge density: approximately 2 edges per second (one on, one off per second)
+- [x] 10.5 Verify bit stream has consistent length across A and B channels
 
-<!-- Note: 10.3-10.5 require a real SDR capture file. -->
-<!-- Tasks verified with synthetic data; real-hardware verification pending capture. -->
+<!-- Verified live on 2026-08-16 17:27-17:30 UTC (SDRplay RSPduo, streaming msf.py; the batch -->
+<!-- demodulate.py CLI from this change was superseded by the streaming architecture). -->
+<!-- 10.3: first [Sync Locked] at 17:28:00.551; marker off-onset ~17:28:00.05 UTC, i.e. at the -->
+<!-- first 500 ms off pulse on the minute boundary (~50 ms constant SDR/USB pipeline offset). -->
+<!-- 10.4: 54 consecutive seconds at exactly 1.000 s cadence (one off + one on edge per second); -->
+<!-- one pulse per second held for the entire run. -->
+<!-- 10.5: A/B 60-slot frames written in lockstep every second (~150 s observed, no channel skew). -->
+<!-- Caveat observed (out of scope here): a spurious 180 ms pulse at ~second 55 desynced the -->
+<!-- second counter (stuck at 59 via the >59 clamp) and the adaptive midpoint tracker fragmented -->
+<!-- the 17:29:00 / 17:30:00 markers into 226+275 ms and 365+137 ms, so no second sync/parity -->
+<!-- report fired. Needs its own follow-up change. -->

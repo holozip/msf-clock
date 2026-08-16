@@ -8,5 +8,5 @@
 
 ## 2. Verification
 
-- [ ] 2.1 Live SDR run (user): verify reported drift is shifted by ≈ −500 ms versus previous runs and is near 0 for a clock close to UTC (bias gone)
-- [ ] 2.2 Commit as a single commit on branch `accuracy-fixes`
+- [x] 2.1 Live SDR run (user): verify reported drift is shifted by ≈ −500 ms versus previous runs and is near 0 for a clock close to UTC (bias gone) — verified 2026-08-16: drift +0.051 s (was ≈ +0.55 s); residual is uncalibrated pipeline latency, expected
+- [x] 2.2 Commit as a single commit on branch `accuracy-fixes`

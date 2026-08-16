@@ -6,29 +6,12 @@ import os
 import sys
 import decoder
 
-# --- OPTIMIZED HIGH-SPEED HARDWARE CONFIGURATION ---
 SAMPLE_RATE = 1e6
-
-# HIGH-SPEED FIX: Slash chunk size to 2,000 samples.
-# This slashes the core hardware collection delay down to just 2 milliseconds!
 CHUNK_SIZE = 2000
 DECIMATION_FACTOR = 1000  # 1 Msps / 1000 = exactly 1000 Hz target (1 sample = 1ms)
 
-# Direct 60 kHz Hardware Tuning
+# Tune SDR to 60khz
 HARDWARE_LO_FREQ = 60000.0
-
-# --- NEW: ELEVATE TO LINUX REAL-TIME FIFO SCHEDULING ---
-print("Elevating process priority to Linux Real-Time SCHED_FIFO...")
-try:
-    # Fetch real-time scheduling parameters
-    param = os.sched_param(os.sched_get_priority_max(os.SCHED_FIFO))
-    # Lock the active process thread into highest real-time priority rank
-    os.sched_setscheduler(0, os.SCHED_FIFO, param)
-    print(" ⚡ SUCCESS: Script granted absolute real-time CPU priority.")
-except PermissionError:
-    print(" ❌ PERMISSION DENIED: Real-time scheduling requires root access.")
-    print("    Please launch your code context using 'sudo'. Exiting.")
-    sys.exit(1)
 
 # --- SDR Initialization ---
 sdr = SoapySDR.Device("driver=sdrplay")
@@ -39,7 +22,7 @@ sdr.setFrequency(SOAPY_SDR_RX, 0, HARDWARE_LO_FREQ)
 sdr.setGainMode(SOAPY_SDR_RX, 0, False)
 sdr.setGain(SOAPY_SDR_RX, 0, 26.8)
 
-# Setup standard Complex Float 32-bit stream interface
+# Setup SDR
 rx_stream = sdr.setupStream(SOAPY_SDR_RX, SOAPY_SDR_CF32)
 sdr.activateStream(rx_stream)
 

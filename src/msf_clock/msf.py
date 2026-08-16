@@ -4,7 +4,8 @@ import numpy
 import datetime
 import os
 import sys
-import decoder
+from msf_clock import decoder
+from msf_clock import timing
 
 SAMPLE_RATE = 1e6
 CHUNK_SIZE = 2000
@@ -38,6 +39,7 @@ global_ms_counter = 0
 is_synchronized = False
 current_second = 0
 last_valid_pulse_ms = 0
+prev_rising_edge_ms_idx = 0
 
 # --- SYSTEM TIMESTAMP CAPTURE REGISTER ---
 minute_trigger_system_time = None
@@ -99,11 +101,15 @@ try:
                     if sample > midpoint:
                         carrier_is_high = True
                         pulse_duration_ms = global_ms_counter - falling_edge_ms_idx
+                        on_run_ms = falling_edge_ms_idx - prev_rising_edge_ms_idx
+                        prev_rising_edge_ms_idx = global_ms_counter
 
-                        if pulse_duration_ms < 50:
+                        gap_kind, a_bit, b_bit = timing.classify_off_gap(pulse_duration_ms, on_run_ms)
+
+                        if gap_kind == "ignored":
                             continue
 
-                        elif 450 <= pulse_duration_ms <= 550:
+                        elif gap_kind == "marker":
                             if falling_edge_wall_dt is not None:
                                 captured_system_dt = falling_edge_wall_dt
                             else:
@@ -122,32 +128,27 @@ try:
                             continue
 
                         elif is_synchronized:
-                            ms_since_last_pulse = falling_edge_ms_idx - last_valid_pulse_ms
-                            last_valid_pulse_ms = falling_edge_ms_idx
+                            if gap_kind == "b_bit":
+                                frame_bit_b[current_second] = 1
+                                last_valid_pulse_ms = global_ms_counter
 
-                            elapsed_seconds = int(round(ms_since_last_pulse / 1000.0))
-
-                            if elapsed_seconds > 0:
-                                current_second += elapsed_seconds
+                                print(
+                                    f"Second {current_second:02d}/59 -> B=1 intra-second (Width: {pulse_duration_ms}ms | Step: +0s)")
                             else:
-                                current_second += 1
+                                ms_since_last_pulse = falling_edge_ms_idx - last_valid_pulse_ms
+                                last_valid_pulse_ms = falling_edge_ms_idx
 
-                            if current_second > 59:
-                                current_second = 59
+                                step_seconds = timing.second_step(ms_since_last_pulse)
+                                current_second += step_seconds
 
-                            a_bit, b_bit = 0, 0
-                            if 80 <= pulse_duration_ms <= 140:
-                                a_bit, b_bit = 0, 0
-                            elif 180 <= pulse_duration_ms <= 240:
-                                a_bit, b_bit = 1, 0
-                            elif 280 <= pulse_duration_ms <= 340:
-                                a_bit, b_bit = 1, 1
+                                if current_second > 59:
+                                    current_second = 59
 
-                            frame_bit_a[current_second] = a_bit
-                            frame_bit_b[current_second] = b_bit
+                                frame_bit_a[current_second] = a_bit
+                                frame_bit_b[current_second] = b_bit
 
-                            print(
-                                f"Second {current_second:02d}/59 -> Bits: A={a_bit}, B={b_bit} (Width: {pulse_duration_ms}ms | Step: +{elapsed_seconds}s)")
+                                print(
+                                    f"Second {current_second:02d}/59 -> Bits: A={a_bit}, B={b_bit} (Width: {pulse_duration_ms}ms | Step: +{step_seconds}s)")
 
 except KeyboardInterrupt:
     print("\nStopping loop...")
